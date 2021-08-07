@@ -9,12 +9,21 @@
 #include <QMouseEvent>
 
 namespace {
+
+    // result from attempting to map a screenspace coordinate into HSV
+    struct HSVInterpolationResult final {
+        pc::HSV result = {0.0f, 0.0f, 0.0f};
+        bool inBounds = false;
+    };
+
     // try to map `posPxV`, a pixel position vector in a rect (left-handed coord system),
     // that is two radii accross and two radii high in HSV space (`dimsPxV`) into the
     // HSV color space at some value (V)
     //
-    // returns `true` if the point is in HSV, `false` if it is out of bounds
-    bool screenPosToHSV(QVector2D posPxV, QVector2D dimsPxV, float v, pc::HSV* out) {
+    // result is only valid if the position was in-bounds
+    HSVInterpolationResult screenPosToHSV(QVector2D posPxV, QVector2D dimsPxV, float v) {
+        HSVInterpolationResult rv;
+
         // remap pixel position (x, y) into relative coordinates (2x/w - 1.0f, 2y/w - 1.0f)
         //
         // yields values in the range [-1.0f, 1.0f], still in the left-handed coord system
@@ -28,7 +37,8 @@ namespace {
         float s = posR.length();
 
         if (s > 1.0f) {
-            return false;  // out of bounds of the unit circle describing HSV
+            rv.inBounds = false;
+            return rv;
         }
 
         // H (hue) is the proportion of the angle between a center-to-top vector
@@ -56,12 +66,33 @@ namespace {
         // remap into [0, 1]
         float h = ang / (2.0f * M_PI);
 
-        *out = {h, s, v};
-        return true;
+        rv.result = {h, s, v};
+        rv.inBounds = true;
+
+        return rv;
+    }
+
+    struct RGB final {
+        float r, g, b;
+    };
+
+    QColor hsv2QColor(pc::HSV const& hsv) {
+        QColor c;
+        c.setHsvF(hsv.h, hsv.s, hsv.v);
+        return c;
+    }
+
+    RGB hsv2rgb(pc::HSV const& hsv) {
+        // cheekily use QColor, rather than roll my own version
+
+        QColor c = hsv2QColor(hsv);
+        RGB rgb;
+        c.getRgbF(&rgb.r, &rgb.g, &rgb.b);
+        return rgb;
     }
 }
 
-pc::HSViewerColorCircle::HSViewerColorCircle(QWidget* parent) : QWidget{parent}, v{0.5f} {
+pc::HSViewerColorCircle::HSViewerColorCircle(QWidget* parent) : QWidget{parent}, v{1.0f} {
     this->setFixedSize(256, 256);  // size of the wheel
     this->setMouseTracking(true);  // always capture mouse events, even if the mouse isn't clicked
 }
@@ -75,8 +106,7 @@ void pc::HSViewerColorCircle::mouseMoveEvent(QMouseEvent* e) {
     QSizeF dimsPx = this->size();
     QVector2D dimsPxV{static_cast<float>(dimsPx.width()), static_cast<float>(dimsPx.height())};
 
-    HSV hsv;
-    bool inBounds = screenPosToHSV(posPxV, dimsPxV, v, &hsv);
+    auto [hsv, inBounds] = screenPosToHSV(posPxV, dimsPxV, v);
 
     if (!inBounds) {
         return;
@@ -86,14 +116,27 @@ void pc::HSViewerColorCircle::mouseMoveEvent(QMouseEvent* e) {
 }
 
 void pc::HSViewerColorCircle::paintEvent(QPaintEvent*) {
+    // HACK: brute force it by coloring each pixel in software
+    //
+    // a good implementation would use QRadialGradient etc. to
+    // hardware-interpolate the circle
+
     QSize dims = this->size();
-    QRect rect{0, 0, dims.width(), dims.height()};
+    QVector2D dimsV{static_cast<float>(dims.width()), static_cast<float>(dims.height())};
 
     QPainter painter{this};
 
-    painter.setPen(QColor{255, 0, 0});
+    for (int y = 0; y < dims.height(); ++y) {
+        for (int x = 0; x < dims.width(); ++x) {
+            QVector2D posV{static_cast<float>(x), static_cast<float>(y)};
+            auto [hsv, inBounds] = screenPosToHSV(posV, dimsV, v);
+            if (inBounds) {
+                painter.setPen(hsv2QColor(hsv));
+                painter.drawRect(x, y, 1, 1);
+            }
 
-    painter.drawArc(rect, 0, 5760);
+        }
+    }
 }
 
 pc::HSViewerDetails::HSViewerDetails(QWidget* parent) :
@@ -132,18 +175,10 @@ void pc::HSViewerDetails::setHSVValue(HSV hsv) {
     vLabel->setText(QString::number(hsv.v));
 
     // update RGB labels
-    {
-        // use Qt's in-built support for HSV-to-RGB mapping
-        QColor c;
-        c.setHsvF(hsv.h, hsv.s, hsv.v);
-
-        float rgb[3];
-        c.getRgbF(rgb + 0, rgb + 1, rgb + 2);
-
-        rLabel->setText(QString::number(rgb[0]));
-        gLabel->setText(QString::number(rgb[1]));
-        bLabel->setText(QString::number(rgb[2]));
-    }
+    RGB rgb = hsv2rgb(hsv);
+    rLabel->setText(QString::number(rgb.r));
+    gLabel->setText(QString::number(rgb.g));
+    bLabel->setText(QString::number(rgb.b));
 }
 
 
