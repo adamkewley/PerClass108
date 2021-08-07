@@ -23,6 +23,9 @@ namespace pc {
     signals:
         // emitted whenever the mouse moves over a value in the HSV circle
         void mouseMoveOverHSV(HSV);
+
+    private:
+        float v;
     };
 
     // viewer that shows the HSV value in text
