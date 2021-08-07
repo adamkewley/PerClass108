@@ -16,7 +16,10 @@ pc::HSViewerColorCircle::HSViewerColorCircle(QWidget* parent) : QWidget{parent} 
 }
 
 void pc::HSViewerColorCircle::mouseMoveEvent(QMouseEvent* e) {
-    // TODO: map the mouse position into a HSV event
+    QPoint pos = e->pos();
+
+    // set dummy placeholder value
+    emit mouseMoveOverHSV(HSV{static_cast<float>(pos.x()), static_cast<float>(pos.y()), 0.0f});
 }
 
 void pc::HSViewerColorCircle::paintEvent(QPaintEvent*) {
@@ -27,20 +30,23 @@ void pc::HSViewerColorCircle::paintEvent(QPaintEvent*) {
 
 
 
-pc::HSViewerDetails::HSViewerDetails(QWidget* parent) : QWidget{parent} {
+pc::HSViewerDetails::HSViewerDetails(QWidget* parent) :
+    QWidget{parent},
+    hLabel{new QLabel{"N/A", this}},
+    sLabel{new QLabel{"N/A", this}},
+    vLabel{new QLabel{"N/A", this}} {
+
     QVBoxLayout* vbox = new QVBoxLayout{this};
     vbox->setObjectName("HSViewerDetails_vbox");
-
-    auto* hLabel = new QLabel{"N/A"};
     vbox->addWidget(hLabel);
-    auto* sLabel = new QLabel{"N/A"};
     vbox->addWidget(sLabel);
-    auto* vLabel = new QLabel{"N/A"};
     vbox->addWidget(vLabel);
 }
 
-void pc::HSViewerDetails::setHSVValue(HSV) {
-    // TODO: set the value, update any labels, etc.
+void pc::HSViewerDetails::setHSVValue(HSV hsv) {
+    hLabel->setText(QString::number(hsv.h));
+    sLabel->setText(QString::number(hsv.s));
+    vLabel->setText(QString::number(hsv.v));
 }
 
 

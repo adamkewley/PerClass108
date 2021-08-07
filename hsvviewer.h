@@ -2,6 +2,8 @@
 
 #include <QWidget>
 
+class QLabel;
+
 namespace pc {
     // raw representation of HSV (hue, saturation, value)
     struct HSV final {
@@ -33,6 +35,11 @@ namespace pc {
     public slots:
         // sets the details to a new HSV value
         void setHSVValue(HSV);
+
+    private:
+        QLabel* hLabel;
+        QLabel* sLabel;
+        QLabel* vLabel;
     };
 
     // viewer that shows HSV color circle and details
