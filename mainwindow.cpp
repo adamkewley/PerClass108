@@ -6,7 +6,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     // init this window's state
     this->setObjectName("main_app_window");
-    this->setFixedSize(800, 600);
+    this->setGeometry(0, 0, 800, 600);
+    this->move(this->screen()->geometry().center() - this->frameGeometry().center());
     this->setWindowTitle(QApplication::translate("appctx", "PerClass108"));
     this->setCentralWidget(new QWidget{});
     this->centralWidget()->setObjectName("main_app_window_central_widget");
@@ -30,8 +31,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         hbox->setSizeConstraint(QLayout::SizeConstraint::SetFixedSize);
 
         // left-hand side: image viewer
-        auto* imageViewer = new QPushButton{QApplication::translate("appctx", "Press me")};
-        hbox->addWidget(imageViewer);
+        QImage img{"C:\\Users\\adamk\\OneDrive\\Desktop\\PerClass108\\smiley-face.jpg"};  // load the image into CPU memory
+
+        if (!img.isNull()) {
+            // loaded fine
+
+            QPixmap imgPixmap = QPixmap::fromImage(img);  // "upload" (e.g. to GPU)
+            auto* label = new QLabel{};
+            hbox->addWidget(label);
+            label->setPixmap(imgPixmap);  // share pixmap with label (uses refcounting?)
+        } else {
+            auto* label = new QLabel{"Error loading image"};
+            hbox->addWidget(label);
+        }
 
         // right-hand side: HSV viewer/editor
         auto* hsvEditor = new QPushButton{QApplication::translate("appctx", "Press me")};
@@ -44,3 +56,5 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         statusBar->addWidget(new QLabel{"hello"});
     }
 }
+
+MainWindow::~MainWindow() noexcept = default;
