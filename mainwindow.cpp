@@ -8,8 +8,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     this->setObjectName("main_app_window");
     this->setFixedSize(800, 600);
     this->setWindowTitle(QApplication::translate("appctx", "PerClass108"));
-    QWidget* centralWidget = new QWidget{};
-    centralWidget->setObjectName("main_app_window_central_widget");
+    this->setCentralWidget(new QWidget{});
+    this->centralWidget()->setObjectName("main_app_window_central_widget");
 
     // configure menu bar
     if (false) {  // TODO: not required for MVP
