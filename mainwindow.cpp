@@ -1,12 +1,14 @@
 #include "mainwindow.h"
 
+#include "hsvviewer.h"
+
 #include <QtWidgets>  // TODO: use specific headers
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+pc::MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     // init this window's state
     this->setObjectName("main_app_window");
-    this->setGeometry(0, 0, 800, 600);
+    this->setGeometry(0, 0, 800, 0);
     this->move(this->screen()->geometry().center() - this->frameGeometry().center());
     this->setWindowTitle(QApplication::translate("appctx", "PerClass108"));
     this->setCentralWidget(new QWidget{});
@@ -31,13 +33,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         hbox->setSizeConstraint(QLayout::SizeConstraint::SetFixedSize);
 
         // left-hand side: image viewer
+        // TODO: at least load a hard-coded Qt Resource
         QImage img{"C:\\Users\\adamk\\OneDrive\\Desktop\\PerClass108\\smiley-face.jpg"};  // load the image into CPU memory
 
         if (!img.isNull()) {
             // loaded fine
 
             QPixmap imgPixmap = QPixmap::fromImage(img);  // "upload" (e.g. to GPU)
+            imgPixmap = imgPixmap.scaled(512, 512, Qt::AspectRatioMode::KeepAspectRatio);
             auto* label = new QLabel{};
+            label->setMaximumWidth(512);
+            label->setMaximumHeight(512);
             hbox->addWidget(label);
             label->setPixmap(imgPixmap);  // share pixmap with label (uses refcounting?)
         } else {
@@ -46,8 +52,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         }
 
         // right-hand side: HSV viewer/editor
-        auto* hsvEditor = new QPushButton{QApplication::translate("appctx", "Press me")};
-        hbox->addWidget(hsvEditor);
+        auto* hsvViewer = new HSVViewer{};
+        hbox->addWidget(hsvViewer);
     }
 
     // configure status bar
@@ -57,4 +63,4 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     }
 }
 
-MainWindow::~MainWindow() noexcept = default;
+pc::MainWindow::~MainWindow() noexcept = default;

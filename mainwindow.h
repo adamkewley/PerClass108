@@ -1,14 +1,13 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include <QMainWindow>
 
-class MainWindow : public QMainWindow
-{
-    Q_OBJECT
+namespace pc {
+    class MainWindow : public QMainWindow {
+        Q_OBJECT
 
-public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow() noexcept;
-};
-#endif // MAINWINDOW_H
+    public:
+        MainWindow(QWidget *parent = nullptr);
+        ~MainWindow() noexcept;
+    };
+}
