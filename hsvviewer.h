@@ -43,6 +43,10 @@ namespace pc {
         QLabel* hLabel;
         QLabel* sLabel;
         QLabel* vLabel;
+
+        QLabel* rLabel;
+        QLabel* gLabel;
+        QLabel* bLabel;
     };
 
     // viewer that shows HSV color circle and details
