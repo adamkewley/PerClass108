@@ -25,13 +25,16 @@ pc::MainWindow::MainWindow(QWidget *parent) :
         menuBar->setObjectName("menubar");
         QMenu* fileMenu = menuBar->addMenu("File");
 
-        auto* action = new QAction{"open_action", this};
-        action->setText("Open");
+        auto* openAction = new QAction{"open_action", this};
+        openAction->setText("Open");
+        connect(openAction, &QAction::triggered, this, &MainWindow::promptUserForImage);
 
+        auto* quitAction = new QAction{"quit_action", this};
+        quitAction->setText("Quit");
+        connect(quitAction, &QAction::triggered, this, &MainWindow::userRequestedExit);
 
-        connect(action, &QAction::triggered, this, &MainWindow::promptUserForImage);
-
-        fileMenu->addAction(action);
+        fileMenu->addAction(openAction);
+        fileMenu->addAction(quitAction);
     }
 
     // main area: image (left) and HSV widget (right)
@@ -76,7 +79,6 @@ void pc::MainWindow::dropEvent(QDropEvent* e) {
         return;  // we're looking for file:// URLs, specifically
     }
 
-    QStringList pathList;
     QList<QUrl> urlList = mimeData.urls();
 
     if (urlList.empty()) {
@@ -100,4 +102,8 @@ void pc::MainWindow::promptUserForImage(bool) {
     }
 
     imgViewer->setImageFile(selected);
+}
+
+void pc::MainWindow::userRequestedExit() {
+    QApplication::quit();
 }

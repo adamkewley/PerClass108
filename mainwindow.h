@@ -18,6 +18,7 @@ namespace pc {
 
     private slots:
         void promptUserForImage(bool checked);
+        void userRequestedExit();
 
     private:
         ImageViewer* imgViewer;
