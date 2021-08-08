@@ -17,6 +17,7 @@ pc::MainWindow::MainWindow(QWidget *parent) :
     this->setWindowTitle(QApplication::translate("appctx", "PerClass108"));
     this->setCentralWidget(new QWidget{});
     this->centralWidget()->setObjectName("main_app_window_central_widget");
+    this->setAcceptDrops(true);
 
     // menu bar
     if (true) {  // TODO: not required for MVP
@@ -57,6 +58,37 @@ pc::MainWindow::MainWindow(QWidget *parent) :
 }
 
 pc::MainWindow::~MainWindow() noexcept = default;
+
+void pc::MainWindow::dragEnterEvent(QDragEnterEvent* e) {
+    e->acceptProposedAction();
+}
+
+void pc::MainWindow::dragMoveEvent(QDragMoveEvent* e) {
+    e->acceptProposedAction();
+}
+
+void pc::MainWindow::dropEvent(QDropEvent* e) {
+    // see: https://wiki.qt.io/Drag_and_Drop_of_files
+
+    QMimeData const& mimeData = *e->mimeData();
+
+    if (!mimeData.hasUrls()) {
+        return;  // we're looking for file:// URLs, specifically
+    }
+
+    QStringList pathList;
+    QList<QUrl> urlList = mimeData.urls();
+
+    if (urlList.empty()) {
+        return; // just in case
+    }
+
+    // HACK: only accept the last file because this UI doesn't support
+    // tabbed viewing
+    imgViewer->setImageFile(urlList.back().toLocalFile());
+
+    e->acceptProposedAction();
+}
 
 void pc::MainWindow::promptUserForImage(bool) {
     QString selected = QFileDialog::getOpenFileName(
