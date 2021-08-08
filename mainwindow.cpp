@@ -1,10 +1,14 @@
 #include "mainwindow.h"
 
 #include "hsvviewer.h"
+#include "imageviewer.h"
 
+#include <iostream>
 #include <QtWidgets>  // TODO: use specific headers
 
-pc::MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+pc::MainWindow::MainWindow(QWidget *parent) :
+    QMainWindow(parent),
+    imgViewer{new ImageViewer{"C:\\Users\\adamk\\OneDrive\\Desktop\\PerClass108\\smiley-face.jpg", this}} {
 
     // init this window's state
     this->setObjectName("main_app_window");
@@ -14,8 +18,8 @@ pc::MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     this->setCentralWidget(new QWidget{});
     this->centralWidget()->setObjectName("main_app_window_central_widget");
 
-    // configure menu bar
-    if (false) {  // TODO: not required for MVP
+    // menu bar
+    if (true) {  // TODO: not required for MVP
         auto* menuBar = this->menuBar();
         menuBar->setObjectName("menubar");
         QMenu* fileMenu = menuBar->addMenu("File");
@@ -23,40 +27,29 @@ pc::MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         auto* action = new QAction{"open_action", this};
         action->setText("Open");
 
+
+        connect(action, &QAction::triggered, this, &MainWindow::promptUserForImage);
+
         fileMenu->addAction(action);
     }
 
-    // create a hbox for the child widgets, so they're laid out horizontally
+    // main area: image (left) and HSV widget (right)
     if (true) {
+
+        // lay them out horizontally
         QHBoxLayout* hbox = new QHBoxLayout{this->centralWidget()};
         hbox->setObjectName("main_area_hbox");
-        hbox->setSizeConstraint(QLayout::SizeConstraint::SetFixedSize);
 
-        // left-hand side: image viewer
-        // TODO: at least load a hard-coded Qt Resource
-        QImage img{"C:\\Users\\adamk\\OneDrive\\Desktop\\PerClass108\\smiley-face.jpg"};  // load the image into CPU memory
+        // left: image file viewer
+        imgViewer = new ImageViewer{"C:\\Users\\adamk\\OneDrive\\Desktop\\PerClass108\\smiley-face.jpg", this};
+        hbox->addWidget(imgViewer);
 
-        if (!img.isNull()) {
-            // loaded fine
-
-            QPixmap imgPixmap = QPixmap::fromImage(img);  // "upload" (e.g. to GPU)
-            imgPixmap = imgPixmap.scaled(512, 512, Qt::AspectRatioMode::KeepAspectRatio);
-            auto* label = new QLabel{};
-            label->setMaximumWidth(512);
-            label->setMaximumHeight(512);
-            hbox->addWidget(label);
-            label->setPixmap(imgPixmap);  // share pixmap with label (uses refcounting?)
-        } else {
-            auto* label = new QLabel{"Error loading image"};
-            hbox->addWidget(label);
-        }
-
-        // right-hand side: HSV viewer/editor
+        // right: HSV viewer
         auto* hsvViewer = new HSVViewer{};
         hbox->addWidget(hsvViewer);
     }
 
-    // configure status bar
+    // status bar
     if (false) {  // TODO: not required for MVP
         QStatusBar* statusBar = this->statusBar();
         statusBar->addWidget(new QLabel{"hello"});
@@ -64,3 +57,15 @@ pc::MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 }
 
 pc::MainWindow::~MainWindow() noexcept = default;
+
+void pc::MainWindow::promptUserForImage(bool) {
+    QString selected = QFileDialog::getOpenFileName(
+                this,
+                tr("Open Image File"));
+
+    if (selected.isNull()) {
+        return;  // user cancelled out
+    }
+
+    imgViewer->setImageFile(selected);
+}
