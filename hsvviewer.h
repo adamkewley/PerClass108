@@ -3,6 +3,7 @@
 #include <QWidget>
 
 class QLabel;
+class QSlider;
 
 namespace pc {
     // raw representation of HSV (hue, saturation, value)
@@ -20,12 +21,37 @@ namespace pc {
         void mouseMoveEvent(QMouseEvent*) override;
         void paintEvent(QPaintEvent*) override;
 
+    public slots:
+        void setValue(float);
+
     signals:
         // emitted whenever the mouse moves over a value in the HSV circle
         void mouseMoveOverHSV(HSV);
 
     private:
         float v;
+    };
+
+    class HSViewerValueSlider final : public QWidget {
+        Q_OBJECT
+
+    public:
+        explicit HSViewerValueSlider(QWidget* parent = nullptr);
+
+    public slots:
+        // set value (brightness), clamped between [0.0f, 1.0f]
+        void setValue(float);
+
+    signals:
+        // emitted when user changes value
+        void valueChangedEvent(float);
+
+    private slots:
+        // used internally when user clicks the slider
+        void sliderValueChanged(int);
+
+    private:
+        QSlider* slider;
     };
 
     // viewer that shows the HSV value in text
