@@ -179,16 +179,32 @@ pc::HSViewerDetails::HSViewerDetails(QWidget* parent) :
     gLabel{new QLabel{"N/A", this}},
     bLabel{new QLabel{"N/A", this}} {
 
+    // each label is vertically aligned
     QVBoxLayout* vbox = new QVBoxLayout{this};
     vbox->setObjectName("HSViewerDetails_vbox");
 
+    // micro helper function for genrating a labelled label
+    auto createAnnotatedLabel = [this, vbox](char const* text, QLabel* val) {
+        QWidget* container = new QWidget{this};
+        vbox->addWidget(container);
+
+        QHBoxLayout* hbox = new QHBoxLayout{container};
+        container->setLayout(hbox);
+
+        QLabel* annotation = new QLabel{text, container};
+        hbox->addWidget(annotation);
+        hbox->addWidget(val);
+
+        hbox->setStretch(1, 1);
+        hbox->stretch(1);
+    };
+
     // HSV printouts
     {
-        vbox->addWidget(hLabel);
-        vbox->addWidget(sLabel);
-        vbox->addWidget(vLabel);
+        createAnnotatedLabel("H = ", hLabel);
+        createAnnotatedLabel("S = ", sLabel);
+        createAnnotatedLabel("V = ", vLabel);
     }
-
 
     // separator line
     {
@@ -200,9 +216,9 @@ pc::HSViewerDetails::HSViewerDetails(QWidget* parent) :
 
     // RGB printouts
     {
-        vbox->addWidget(rLabel);
-        vbox->addWidget(gLabel);
-        vbox->addWidget(bLabel);
+        createAnnotatedLabel("R = ", rLabel);
+        createAnnotatedLabel("G = ", gLabel);
+        createAnnotatedLabel("B = ", bLabel);
     }
 }
 
