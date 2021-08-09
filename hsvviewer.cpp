@@ -92,9 +92,18 @@ namespace {
         c.getRgbF(&rgb.r, &rgb.g, &rgb.b);
         return rgb;
     }
+
+    constexpr float hsv_senteniel = -1337.0f;
 }
 
-pc::HSViewerColorCircle::HSViewerColorCircle(QWidget* parent) : QWidget{parent}, v{1.0f} {
+pc::HSV::HSV(QColor const& c) {
+    c.getHsvF(&h, &s, &v);
+}
+
+pc::HSViewerColorCircle::HSViewerColorCircle(QWidget* parent) :
+    QWidget{parent},
+    hsv{hsv_senteniel, hsv_senteniel, 1.0f} {
+
     this->setFixedSize(256, 256);  // size of the wheel
     this->setMouseTracking(true);  // always capture mouse events, even if the mouse isn't clicked
 }
@@ -108,13 +117,17 @@ void pc::HSViewerColorCircle::mouseMoveEvent(QMouseEvent* e) {
     QSizeF dimsPx = this->size();
     QVector2D dimsPxV{static_cast<float>(dimsPx.width()), static_cast<float>(dimsPx.height())};
 
-    auto [hsv, inBounds] = screenPosToHSV(posPxV, dimsPxV, v);
+    auto [newHsv, inBounds] = screenPosToHSV(posPxV, dimsPxV, hsv.v);
 
     if (!inBounds) {
         return;
     }
 
-    emit mouseMoveOverHSV(hsv);
+    hsv = newHsv;
+
+    emit mouseMoveOverColor(QColor::fromHsvF(hsv.h, hsv.s, hsv.v));
+
+    this->update();
 }
 
 void pc::HSViewerColorCircle::paintEvent(QPaintEvent*) {
@@ -128,6 +141,7 @@ void pc::HSViewerColorCircle::paintEvent(QPaintEvent*) {
 
     QPainter painter{this};
 
+    float v = hsv.v;
     for (int y = 0; y < dims.height(); ++y) {
         for (int x = 0; x < dims.width(); ++x) {
             QVector2D posV{static_cast<float>(x), static_cast<float>(y)};
@@ -139,10 +153,35 @@ void pc::HSViewerColorCircle::paintEvent(QPaintEvent*) {
 
         }
     }
+
+    // also, if h and s aren't senteniels (either because the user moused
+    // over a value or it was externally set) draw a circle at the hsv pos
+    if (hsv.h != hsv_senteniel && hsv.s != hsv_senteniel) {
+
+        // figure out point location on circle. Saturation (S)
+        // is radius, Hue (H) is rotation from up vertical
+        QPointF up{0.0f, -hsv.s * (dimsV.x()/2.0f)};
+        QTransform xform{};
+        xform.translate(dimsV.x()/2.0f, dimsV.y()/2.0f);
+        xform.rotateRadians(2.0f * M_PI * hsv.h);
+
+        QPointF origin = xform.map(up);
+
+        QRect rect(origin.x() - 1, origin.y() - 1, 3, 3);
+
+        painter.setPen(QColor::fromRgb(0, 0, 0));
+        painter.setBrush(QColor::fromRgb(0, 0, 0));
+        painter.drawRect(rect);
+    }
 }
 
 void pc::HSViewerColorCircle::setValue(float v) {
-    this->v = v;
+    this->hsv.v = v;
+    this->update();
+}
+
+void pc::HSViewerColorCircle::setColor(QColor const& c) {
+    this->hsv = HSV{c};
     this->update();
 }
 
@@ -222,8 +261,10 @@ pc::HSViewerDetails::HSViewerDetails(QWidget* parent) :
     }
 }
 
-void pc::HSViewerDetails::setHSVValue(HSV hsv) {
+void pc::HSViewerDetails::setColor(QColor const& color) {
+
     // update HSV labels
+    HSV hsv{color};
     hLabel->setText(QString::number(hsv.h));
     sLabel->setText(QString::number(hsv.s));
     vLabel->setText(QString::number(hsv.v));
@@ -238,7 +279,11 @@ void pc::HSViewerDetails::setHSVValue(HSV hsv) {
 
 // top-level HSVViewer impl.
 
-pc::HSVViewer::HSVViewer(QWidget *parent) : QWidget(parent) {
+pc::HSVViewer::HSVViewer(QWidget *parent) :
+    QWidget(parent),
+    circle{new HSViewerColorCircle{this}},
+    slider{new HSViewerValueSlider{this}},
+    details{new HSViewerDetails{this}} {
 
     QVBoxLayout* vbox = new QVBoxLayout{this};
     vbox->setObjectName("HSVViewer_vbox");
@@ -254,21 +299,25 @@ pc::HSVViewer::HSVViewer(QWidget *parent) : QWidget(parent) {
     container->setLayout(hbox);
 
     // put circle on the left
-    auto* circle = new HSViewerColorCircle{};
     hbox->addWidget(circle);
 
     // put the slider on the right
-    auto* slider = new HSViewerValueSlider{};
     hbox->addWidget(slider);
 
-    // connect the slider to the circle
-    connect(slider, &HSViewerValueSlider::valueChangedEvent, circle, &HSViewerColorCircle::setValue);
-
     // bottom: HSV value printouts (as text values)
-    auto* viewer = new HSViewerDetails{};
-    vbox->addWidget(viewer);
+    vbox->addWidget(details);
 
     // connect the circle to the viewer, so the viewer displays values as the
     // mouse moves over it
-    connect(circle, &HSViewerColorCircle::mouseMoveOverHSV, viewer, &HSViewerDetails::setHSVValue);
+    connect(circle, &HSViewerColorCircle::mouseMoveOverColor, details, &HSViewerDetails::setColor);
+
+    // connect the slider to the circle
+    connect(slider, &HSViewerValueSlider::valueChangedEvent, circle, &HSViewerColorCircle::setValue);
+}
+
+void pc::HSVViewer::setColor(QColor const& c) {
+    circle->setColor(c);
+    details->setColor(c);
+    HSV hsv{c};
+    slider->setValue(hsv.v);
 }

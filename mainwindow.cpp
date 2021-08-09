@@ -49,6 +49,8 @@ pc::MainWindow::MainWindow(QWidget *parent) :
         // right: HSV viewer
         auto* hsvViewer = new HSVViewer{};
         hbox->addWidget(hsvViewer);
+
+        connect(this->imgViewer, &ImageViewer::mouseMoveOverColor, hsvViewer, &HSVViewer::setColor);
     }
 
     // status bar

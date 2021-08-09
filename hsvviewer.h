@@ -4,11 +4,15 @@
 
 class QLabel;
 class QSlider;
+class QColor;
 
 namespace pc {
     // raw representation of HSV (hue, saturation, value)
     struct HSV final {
         float h, s, v;
+
+        HSV(float h_, float s_, float v_) : h{h_}, s{s_}, v{v_} {}
+        explicit HSV(QColor const&);
     };
 
     // circle containing HSV color space
@@ -18,18 +22,19 @@ namespace pc {
     public:
         explicit HSViewerColorCircle(QWidget* parent = nullptr);
 
+    public slots:
+        void setValue(float);
+        void setColor(QColor const&);
+
+    signals:
+        // emitted whenever the mouse moves over a color in the HSV circle
+        void mouseMoveOverColor(QColor const&);
+
+    private:
         void mouseMoveEvent(QMouseEvent*) override;
         void paintEvent(QPaintEvent*) override;
 
-    public slots:
-        void setValue(float);
-
-    signals:
-        // emitted whenever the mouse moves over a value in the HSV circle
-        void mouseMoveOverHSV(HSV);
-
-    private:
-        float v;
+        HSV hsv;
     };
 
     class HSViewerValueSlider final : public QWidget {
@@ -63,7 +68,7 @@ namespace pc {
 
     public slots:
         // sets the details to a new HSV value
-        void setHSVValue(HSV);
+        void setColor(QColor const&);
 
     private:
         QLabel* hLabel;
@@ -81,5 +86,13 @@ namespace pc {
 
     public:
         explicit HSVViewer(QWidget* parent = nullptr);
+
+    public slots:
+        void setColor(QColor const&);
+
+    private:
+        HSViewerColorCircle* circle;
+        HSViewerValueSlider* slider;
+        HSViewerDetails* details;
     };
 }

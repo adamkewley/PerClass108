@@ -1,39 +1,53 @@
 #include "imageviewer.h"
 
-#include <QPixmap>
-#include <QLabel>
+#include <QImage>
 #include <QVBoxLayout>
-
-namespace {
-    // tries to load an image file located at `path` into the provided `QLabel`
-    void loadImageFileIntoLabel(QString const& path, QLabel& label) {
-        QPixmap pxmap{path};
-
-        if (pxmap.isNull()) {
-            return;  // HACK: i'm too lazy to handle loading errors right now
-        }
-
-        QSize dims = label.size();
-
-        // rescale pixelmap to fit widget bounds
-        pxmap = pxmap.scaled(dims.width(), dims.height(), Qt::AspectRatioMode::KeepAspectRatio);
-
-        label.setPixmap(pxmap);
-    }
-}
+#include <QMouseEvent>
+#include <QPaintEvent>
+#include <QPainter>
+#include <QPointF>
 
 pc::ImageViewer::ImageViewer(QString const& initialImage, QWidget* parent) :
     QWidget{parent},
-    label{new QLabel{"loading...", this}} {
+    image{new QImage{initialImage}} {
 
-    QVBoxLayout* vbox = new QVBoxLayout{this};
-
-    vbox->addWidget(label);
-    label->setMinimumSize(512, 512);
-
-    loadImageFileIntoLabel(initialImage, *label);
+    this->setLayout(new QVBoxLayout{this});
+    this->setMinimumWidth(512);
+    this->setMouseTracking(true);
 }
 
 void pc::ImageViewer::setImageFile(QString const& newPath) {
-    loadImageFileIntoLabel(newPath, *label);
+    auto newImage = std::make_unique<QImage>(newPath);
+
+    if (newImage->isNull()) {
+        return;  // error loading image
+    }
+
+    this->image = std::move(newImage);
+    this->update();
+}
+
+void pc::ImageViewer::paintEvent(QPaintEvent* e) {
+    QPainter{this}.drawImage(this->rect(), *this->image);
+}
+
+#include <iostream>
+
+void pc::ImageViewer::mouseMoveEvent(QMouseEvent* e) {
+    // the mouse move event is happening in a "stretched"
+    // space, because the user is viewing a stretched blit
+    // of the image
+
+    QPointF p = e->position();
+    float img_w = static_cast<float>(image->width());
+    float img_h = static_cast<float>(image->height());
+    float this_w = static_cast<float>(this->width());
+    float this_h = static_cast<float>(this->height());
+
+    int img_x = p.x() * (img_w/this_w);
+    int img_y = p.y() * (img_h/this_h);
+
+    QColor color = this->image->pixelColor(img_x, img_y);
+
+    emit mouseMoveOverColor(color);
 }

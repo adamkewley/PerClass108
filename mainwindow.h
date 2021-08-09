@@ -12,15 +12,15 @@ namespace pc {
         MainWindow(QWidget *parent = nullptr);
         ~MainWindow() noexcept;
 
-        void dragEnterEvent(QDragEnterEvent*) override;
-        void dragMoveEvent(QDragMoveEvent*) override;
-        void dropEvent(QDropEvent*) override;
-
     private slots:
         void promptUserForImage(bool checked);
         void userRequestedExit();
 
     private:
+        void dragEnterEvent(QDragEnterEvent*) override;
+        void dragMoveEvent(QDragMoveEvent*) override;
+        void dropEvent(QDropEvent*) override;
+
         ImageViewer* imgViewer;
     };
 }
