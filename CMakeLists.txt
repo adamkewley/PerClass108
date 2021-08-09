@@ -35,6 +35,7 @@ set(PROJECT_SOURCES
         hsvviewer.h
         imageviewer.h
         imageviewer.cpp
+        resources.qrc
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

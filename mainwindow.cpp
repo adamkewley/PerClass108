@@ -3,12 +3,11 @@
 #include "hsvviewer.h"
 #include "imageviewer.h"
 
-#include <iostream>
 #include <QtWidgets>  // TODO: use specific headers
 
 pc::MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    imgViewer{new ImageViewer{"C:\\Users\\adamk\\OneDrive\\Desktop\\PerClass108\\smiley-face.jpg", this}} {
+    imgViewer{new ImageViewer{":/images/smiley-face.jpg", this}} {
 
     // init this window's state
     this->setObjectName("main_app_window");
@@ -45,7 +44,6 @@ pc::MainWindow::MainWindow(QWidget *parent) :
         hbox->setObjectName("main_area_hbox");
 
         // left: image file viewer
-        imgViewer = new ImageViewer{"C:\\Users\\adamk\\OneDrive\\Desktop\\PerClass108\\smiley-face.jpg", this};
         hbox->addWidget(imgViewer);
 
         // right: HSV viewer
