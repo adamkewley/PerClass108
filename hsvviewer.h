@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include <QPixmap>
 
 class QLabel;
 class QSlider;
@@ -35,8 +36,12 @@ namespace pc {
         void paintEvent(QPaintEvent*) override;
 
         HSV hsv;
+        QPixmap cachedCircle;
+        float cachedCircleValue;
     };
 
+
+    // slider for manipulating V
     class HSViewerValueSlider final : public QWidget {
         Q_OBJECT
 
@@ -59,6 +64,7 @@ namespace pc {
         QSlider* slider;
     };
 
+
     // viewer that shows the HSV value in text
     class HSViewerDetails final : public QWidget {
         Q_OBJECT
@@ -79,6 +85,7 @@ namespace pc {
         QLabel* gLabel;
         QLabel* bLabel;
     };
+
 
     // viewer that shows HSV color circle and details
     class HSVViewer final : public QWidget {

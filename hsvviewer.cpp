@@ -33,12 +33,14 @@ namespace {
         // the circle
 
         // S (saturation) is just the distance from the center of the circle
-        float s = posR.length();
+        float s2 = posR.lengthSquared();
 
-        if (s > 1.0f) {
+        if (s2 > 1.0f) {  // it's a unit circle, so r2 == 1.0f
             rv.inBounds = false;
             return rv;
         }
+
+        float s = sqrtf(s2);
 
         // H (hue) is the proportion of the angle between a center-to-top vector
         // and the position
@@ -93,12 +95,36 @@ namespace {
         return rgb;
     }
 
+    // draw a HSV circle into a blittable pixmap
+    QPixmap drawHsvCircle(int w, int h, float v) {
+        QImage img{w, h, QImage::Format_RGBA8888};
+        img.fill(QColor::fromRgb(0x00, 0x00, 0x00, 0x00));
+        QVector2D dimsV(w, h);
+        QPainter painter{&img};
+
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                QVector2D posV{static_cast<float>(x), static_cast<float>(y)};
+                auto [hsv, inBounds] = screenPosToHSV(posV, dimsV, v);
+                if (inBounds) {
+                    painter.setPen(hsv2QColor(hsv));
+                    painter.drawPoint(x, y);
+                }
+            }
+        }
+
+        return QPixmap::fromImage(img);
+    }
+
     constexpr float hsv_senteniel = -1337.0f;
 }
 
 pc::HSV::HSV(QColor const& c) {
     c.getHsvF(&h, &s, &v);
 }
+
+
+// color circle impl.
 
 pc::HSViewerColorCircle::HSViewerColorCircle(QWidget* parent) :
     QWidget{parent},
@@ -131,6 +157,15 @@ void pc::HSViewerColorCircle::mouseMoveEvent(QMouseEvent* e) {
 }
 
 void pc::HSViewerColorCircle::paintEvent(QPaintEvent*) {
+    // update circle pixels, if necessary
+    if (cachedCircle.isNull() ||
+        cachedCircle.height() != this->height() ||
+        cachedCircle.width() != this->width() ||
+        cachedCircleValue != this->hsv.v) {
+
+        this->cachedCircle = drawHsvCircle(this->width(), this->height(), this->hsv.v);
+    }
+
     // HACK: brute force it by coloring each pixel in software
     //
     // a good implementation would use QRadialGradient etc. to
@@ -140,19 +175,7 @@ void pc::HSViewerColorCircle::paintEvent(QPaintEvent*) {
     QVector2D dimsV{static_cast<float>(dims.width()), static_cast<float>(dims.height())};
 
     QPainter painter{this};
-
-    float v = hsv.v;
-    for (int y = 0; y < dims.height(); ++y) {
-        for (int x = 0; x < dims.width(); ++x) {
-            QVector2D posV{static_cast<float>(x), static_cast<float>(y)};
-            auto [hsv, inBounds] = screenPosToHSV(posV, dimsV, v);
-            if (inBounds) {
-                painter.setPen(hsv2QColor(hsv));
-                painter.drawRect(x, y, 1, 1);
-            }
-
-        }
-    }
+    painter.drawPixmap(this->rect(), this->cachedCircle);
 
     // also, if h and s aren't senteniels (either because the user moused
     // over a value or it was externally set) draw a circle at the hsv pos
@@ -167,11 +190,11 @@ void pc::HSViewerColorCircle::paintEvent(QPaintEvent*) {
 
         QPointF origin = xform.map(up);
 
-        QRect rect(origin.x() - 1, origin.y() - 1, 3, 3);
+        QRect rect(origin.x() - 3, origin.y() - 3, 7, 7);
 
-        painter.setPen(QColor::fromRgb(0, 0, 0));
-        painter.setBrush(QColor::fromRgb(0, 0, 0));
-        painter.drawRect(rect);
+        painter.setPen(QColor::fromRgb(0, 0, 0, 0xff));
+        painter.setBrush(QColor::fromRgb(0xff, 0xff, 0xff, 0xff));
+        painter.drawEllipse(rect);
     }
 }
 
@@ -184,6 +207,9 @@ void pc::HSViewerColorCircle::setColor(QColor const& c) {
     this->hsv = HSV{c};
     this->update();
 }
+
+
+// value slider impl.
 
 pc::HSViewerValueSlider::HSViewerValueSlider(QWidget* parent) :
     slider{new QSlider{Qt::Orientation::Vertical, parent}} {
@@ -204,6 +230,9 @@ void pc::HSViewerValueSlider::setValue(float v) {
 void pc::HSViewerValueSlider::sliderValueChanged(int v) {
     emit valueChangedEvent(static_cast<float>(v) / 1024);
 }
+
+
+// viewer details impl.
 
 pc::HSViewerDetails::HSViewerDetails(QWidget* parent) :
     QWidget{parent},
@@ -275,6 +304,7 @@ void pc::HSViewerDetails::setColor(QColor const& color) {
     gLabel->setText(QString::number(rgb.g));
     bLabel->setText(QString::number(rgb.b));
 }
+
 
 
 // top-level HSVViewer impl.
