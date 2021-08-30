@@ -164,6 +164,7 @@ void pc::HSViewerColorCircle::paintEvent(QPaintEvent*) {
         cachedCircleValue != this->hsv.v) {
 
         this->cachedCircle = drawHsvCircle(this->width(), this->height(), this->hsv.v);
+        cachedCircleValue = hsv.v;
     }
 
     // HACK: brute force it by coloring each pixel in software
