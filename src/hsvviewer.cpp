@@ -1,4 +1,4 @@
-#include "hsvviewer.h"
+#include "hsvviewer.hpp"
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -312,9 +312,9 @@ void pc::HSViewerDetails::setColor(QColor const& color) {
 
 pc::HSVViewer::HSVViewer(QWidget *parent) :
     QWidget(parent),
-    circle{new HSViewerColorCircle{this}},
-    slider{new HSViewerValueSlider{this}},
-    details{new HSViewerDetails{this}} {
+    m_Circle{new HSViewerColorCircle{this}},
+    m_ValueSlider{new HSViewerValueSlider{this}},
+    m_DetailsPrintout{new HSViewerDetails{this}} {
 
     QVBoxLayout* vbox = new QVBoxLayout{this};
     vbox->setObjectName("HSVViewer_vbox");
@@ -330,25 +330,25 @@ pc::HSVViewer::HSVViewer(QWidget *parent) :
     container->setLayout(hbox);
 
     // put circle on the left
-    hbox->addWidget(circle);
+    hbox->addWidget(m_Circle);
 
     // put the slider on the right
-    hbox->addWidget(slider);
+    hbox->addWidget(m_ValueSlider);
 
     // bottom: HSV value printouts (as text values)
-    vbox->addWidget(details);
+    vbox->addWidget(m_DetailsPrintout);
 
     // connect the circle to the viewer, so the viewer displays values as the
     // mouse moves over it
-    connect(circle, &HSViewerColorCircle::mouseMoveOverColor, details, &HSViewerDetails::setColor);
+    connect(m_Circle, &HSViewerColorCircle::mouseMoveOverColor, m_DetailsPrintout, &HSViewerDetails::setColor);
 
     // connect the slider to the circle
-    connect(slider, &HSViewerValueSlider::valueChangedEvent, circle, &HSViewerColorCircle::setValue);
+    connect(m_ValueSlider, &HSViewerValueSlider::valueChangedEvent, m_Circle, &HSViewerColorCircle::setValue);
 }
 
 void pc::HSVViewer::setColor(QColor const& c) {
-    circle->setColor(c);
-    details->setColor(c);
+    m_Circle->setColor(c);
+    m_DetailsPrintout->setColor(c);
     HSV hsv{c};
-    slider->setValue(hsv.v);
+    m_ValueSlider->setValue(hsv.v);
 }

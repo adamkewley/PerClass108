@@ -10,8 +10,8 @@ class QImage;
 class QMouseEvent;
 class QEvent;
 
-namespace pc {
-
+namespace pc
+{
     class ImageViewer final : public QWidget {
         Q_OBJECT
 
@@ -29,6 +29,6 @@ namespace pc {
         void mouseMoveEvent(QMouseEvent*) override;
         void paintEvent(QPaintEvent*) override;
 
-        std::unique_ptr<QImage> image;
+        std::unique_ptr<QImage> m_Image;
     };
 }

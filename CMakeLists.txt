@@ -28,14 +28,14 @@ find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
 set(PROJECT_SOURCES
-        main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        hsvviewer.cpp
-        hsvviewer.h
-        imageviewer.h
-        imageviewer.cpp
-        resources.qrc
+    src/main.cpp
+    src/mainwindow.cpp
+    src/mainwindow.hpp
+    src/hsvviewer.cpp
+    src/hsvviewer.hpp
+    src/imageviewer.hpp
+    src/imageviewer.cpp
+    resources.qrc
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

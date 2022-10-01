@@ -2,7 +2,7 @@
 
 > A Qt application for a tech interview question
 
-![screenshot](screenshot.png)
+![screenshot](resources/screenshot.png)
 
 PerClass108 is a Qt6 application I whipped together one weekend in Aug 2021. I
 was given a basic spec to make a Qt application that:

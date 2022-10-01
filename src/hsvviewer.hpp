@@ -7,7 +7,8 @@ class QLabel;
 class QSlider;
 class QColor;
 
-namespace pc {
+namespace pc
+{
     // raw representation of HSV (hue, saturation, value)
     struct HSV final {
         float h, s, v;
@@ -39,7 +40,6 @@ namespace pc {
         QPixmap cachedCircle;
         float cachedCircleValue;
     };
-
 
     // slider for manipulating V
     class HSViewerValueSlider final : public QWidget {
@@ -98,8 +98,8 @@ namespace pc {
         void setColor(QColor const&);
 
     private:
-        HSViewerColorCircle* circle;
-        HSViewerValueSlider* slider;
-        HSViewerDetails* details;
+        HSViewerColorCircle* m_ColorCircle;
+        HSViewerValueSlider* m_ValueSlider;
+        HSViewerDetails* m_DetailsPrintout;
     };
 }

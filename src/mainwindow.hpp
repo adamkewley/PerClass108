@@ -2,9 +2,10 @@
 
 #include <QMainWindow>
 
-namespace pc {
-    class ImageViewer;
+namespace pc { class ImageViewer; }
 
+namespace pc
+{
     class MainWindow : public QMainWindow {
         Q_OBJECT
 
@@ -21,6 +22,6 @@ namespace pc {
         void dragMoveEvent(QDragMoveEvent*) override;
         void dropEvent(QDropEvent*) override;
 
-        ImageViewer* imgViewer;
+        ImageViewer* m_ImageViewer;
     };
 }
